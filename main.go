@@ -96,12 +96,12 @@ func main() {
 	if networkConfig != "" {
 		imgSize += getFileSize(networkConfig)
 	}
-	if imgSize%(4*1024*1024) != 0 {
-		imgSize += (4 * 1024 * 1024) - (imgSize % (4 * 1024 * 1024))
+	if imgSize%(1024*1024) != 0 {
+		imgSize += (1024 * 1024) - (imgSize % (1024 * 1024))
 	}
 
 	var (
-		espSize          int64 = imgSize
+		espSize          int64 = imgSize + 4*1024*1024
 		diskSize         int64 = espSize + 4*1024*1024
 		blkSize          int64 = 512
 		partitionStart   int64 = 2048
