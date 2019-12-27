@@ -27,9 +27,9 @@ RUN_ARGS += -initrd "$(RUN_INITRD)"
 endif
 ifneq (,$(wildcard $(RUN_ROOTFS)))
 RUN_ARGS += -rootfs "$(RUN_ROOTFS)"
-RUN_ARGS += -cmdline 'ds=nocloud root=file:///boot/rootfs.squashfs overlayroot=tmpfs quiet ---'
+RUN_ARGS += -cmdline 'console=ttyS0 ds=nocloud root=file:///boot/rootfs.squashfs overlayroot=tmpfs quiet ---'
 else
-RUN_ARGS += -cmdline 'quiet ---'
+RUN_ARGS += -cmdline 'console=ttyS0 quiet ---'
 endif
 ifneq (,$(wildcard $(RUN_METADATA)))
 RUN_ARGS += -metaData "$(RUN_METADATA)"
