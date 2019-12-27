@@ -27,7 +27,7 @@ RUN_ARGS += -initrd "$(RUN_INITRD)"
 endif
 ifneq (,$(wildcard $(RUN_ROOTFS)))
 RUN_ARGS += -rootfs "$(RUN_ROOTFS)"
-RUN_ARGS += -cmdline 'console=hvc0 ds=nocloud root=file:///boot/rootfs.squashfs overlayroot=tmpfs quiet ---'
+RUN_ARGS += -cmdline 'console=hvc0 root=file:///boot/rootfs.squashfs overlayroot=tmpfs quiet ---'
 else
 RUN_ARGS += -cmdline 'console=hvc0 quiet ---'
 endif
