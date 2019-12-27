@@ -9,9 +9,16 @@ local-hostname: cloudimg
 
 ```yaml:user-data
 #cloud-config
-password: ubuntu
-chpasswd: { expire: False }
-ssh_pwauth: True
+
+users:
+  - name: ubuntu
+    gecos: Ubuntu
+    shell: /bin/bash
+    home: /home/ubuntu
+    lock_passwd: False
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [adm, users, sudo]
+    passwd: $6$KKyD4e8i$CYC4kPov1t5hKdexIYHzEaRsIe.ZQYXD8AzCASmyPhPCUpJ5tLzfs99YSAbtP96Y03FaJi0T.vj8zBHrDx0b51
 ```
 
 ```sh
