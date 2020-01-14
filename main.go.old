@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/diskfs/go-diskfs"
 	"github.com/diskfs/go-diskfs/disk"
@@ -131,8 +134,9 @@ func main() {
 	}
 
 	spec := disk.FilesystemSpec{
-		Partition: 1,
-		FSType:    filesystem.TypeFat32,
+		Partition:   1,
+		FSType:      filesystem.TypeFat32,
+		VolumeLabel: "CIDATA",
 	}
 
 	fs, err := img.CreateFilesystem(spec)
@@ -140,13 +144,82 @@ func main() {
 		log.Panic(err)
 	}
 
-	err = fs.Mkdir("/EFI/BOOT")
+	err = fs.Mkdir("/loader/entries")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	if err = saveFile(fs, "/EFI/BOOT/BOOTX64.EFI", kernImg); err != nil {
+	loader, err := fs.OpenFile("/loader/loader.conf", os.O_CREATE|os.O_RDWR)
+	if err != nil {
 		log.Panic(err)
+	}
+
+	loaderConf := strings.Builder{}
+	loaderConf.WriteString("default       default\n")
+	loaderConf.WriteString("timeout       0\n")
+	loaderConf.WriteString("editor        no\n")
+	loaderConf.WriteString("auto-entries  0\n")
+	loaderConf.WriteString("auto-firmware 0\n")
+	loaderConf.WriteString("console-mode  auto\n")
+
+	_, err = loader.Write([]byte(loaderConf.String()))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	entry, err := fs.OpenFile("/loader/entries/default.conf", os.O_CREATE|os.O_RDWR)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	entryConf := strings.Builder{}
+	entryConf.WriteString("title Default\n")
+	entryConf.WriteString(fmt.Sprintf("linux /boot/%s\n", path.Base(kernImg)))
+	if initImg != "" {
+		entryConf.WriteString(fmt.Sprintf("initrd /boot/%s\n", path.Base(initImg)))
+	}
+	if cmdline != "" {
+		entryConf.WriteString(fmt.Sprintf("options %s\n", cmdline))
+	}
+
+	_, err = entry.Write([]byte(entryConf.String()))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = fs.Mkdir("/boot")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	if err = saveFile(fs, fmt.Sprintf("/boot/%s", path.Base(kernImg)), kernImg); err != nil {
+		log.Panic(err)
+	}
+	if initImg != "" {
+		if err = saveFile(fs, fmt.Sprintf("/boot/%s", path.Base(initImg)), initImg); err != nil {
+			log.Panic(err)
+		}
+	}
+	if rootImg != "" {
+		if err = saveFile(fs, fmt.Sprintf("/boot/%s", path.Base(rootImg)), rootImg); err != nil {
+			log.Panic(err)
+		}
+	}
+
+	if metaData != "" {
+		if err = saveFile(fs, "/meta-data", metaData); err != nil {
+			log.Panic(err)
+		}
+	}
+	if userData != "" {
+		if err = saveFile(fs, "/user-data", userData); err != nil {
+			log.Panic(err)
+		}
+	}
+	if networkConfig != "" {
+		if err = saveFile(fs, "/network-config", networkConfig); err != nil {
+			log.Panic(err)
+		}
 	}
 
 	log.Println("Finish!")
